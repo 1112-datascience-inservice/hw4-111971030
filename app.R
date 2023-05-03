@@ -1,60 +1,105 @@
-library(shiny)
+
+
+if(!require('shiny')) {
+  install.packages('shiny')
+  library('shiny')
+}
+if(!require('ggbiplot')) {
+  install.packages('remotes', dependencies = TRUE)
+  remotes::install_github("vqv/ggbiplot")
+}
+
+
+data(iris)
 
 # Define UI for app that draws a histogram ----
 ui <- fluidPage(
-  
-  # App title ----
-  titlePanel("Hello Shiny!"),
-  
-  # Sidebar layout with input and output definitions ----
-  sidebarLayout(
-    
-    # Sidebar panel for inputs ----
-    sidebarPanel(
-      
-      # Input: Slider for the number of bins ----
-      sliderInput(inputId = "bins",
-                  label = "Number of bins:",
-                  min = 1,
-                  max = 50,
-                  value = 30)
-      
-    ),
-    
-    # Main panel for displaying outputs ----
-    mainPanel(
-      
-      # Output: Histogram ----
-      plotOutput(outputId = "distPlot")
-      
-    )
+  # navbar
+  navbarPage(
+    title = "111971030 黃哲偉 HW4 PCA", # 應用標題
+    tabPanel("PCA", 
+             tabsetPanel(
+               tabPanel("pca plot", 
+                        fluidPage(
+                          fluidRow(
+                            column(4, 
+                              h2("PCA"),
+                              selectInput("x_var", "X-Axis Variable:",
+                                          choices = c("PC1", "PC2", "PC3", "PC4"),
+                                          selected = "PC1"),
+                              selectInput("y_var", "Y-Axis Variable:",
+                                          choices = c("PC1", "PC2", "PC3", "PC4"),
+                                          selected = "PC2")
+                             ),
+                            column(8, 
+                              plotOutput("pca_plot")
+                            )
+                          )
+                        )
+               ),
+               tabPanel("result data", ""),
+               tabPanel("input data(log)", ""),
+               tabPanel("extended results", "")
+              )
+             ),
+    tabPanel("CA", 
+             tabsetPanel(
+               tabPanel("ca plot", ""),
+               tabPanel("extended results", "")
+               )
+             ),
+    tabPanel("iris data", "This is page 3 content.")
   )
 )
 
-# Define server logic required to draw a histogram ----
-server <- function(input, output) {
+# Server
+server <- function(input, output, session) {
+  # log transform 
+  log.ir <- log(iris[, 1:4])
+  ir.species <- iris[, 5]
+  # apply PCA - scale. = TRUE is highly advisable, but default is FALSE. 
+  ir.pca <- prcomp(log.ir, center = TRUE, scale. = TRUE)
   
-  # Histogram of the Old Faithful Geyser Data ----
-  # with requested number of bins
-  # This expression that generates a histogram is wrapped in a call
-  # to renderPlot to indicate that:
-  #
-  # 1. It is "reactive" and therefore should be automatically
-  #    re-executed when inputs (input$bins) change
-  # 2. Its output type is a plot
-  output$distPlot <- renderPlot({
-    
-    x    <- faithful$waiting
-    bins <- seq(min(x), max(x), length.out = input$bins + 1)
-    
-    hist(x, breaks = bins, col = "#75AADB", border = "white",
-         xlab = "Waiting time to next eruption (in mins)",
-         main = "Histogram of waiting times")
-    
+  # define PCA
+  
+  pca_data <- reactive({
+    x_var <- switch(input$x_var,
+                    "PC1" = ir.pca$x[, 1],
+                    "PC2" = ir.pca$x[, 2],
+                    "PC3" = ir.pca$x[, 3],
+                    "PC4" = ir.pca$x[, 4])
+    y_var <- switch(input$y_var,
+                    "PC1" = ir.pca$x[, 1],
+                    "PC2" = ir.pca$x[, 2],
+                    "PC3" = ir.pca$x[, 3],
+                    "PC4" = ir.pca$x[, 4])
+    data.frame(x = x_var, y = y_var, species = ir.species)
   })
   
+  # plot PCA
+  plotPCA <- function() {
+    ggbiplot(ir.pca, obs.scale = 1, var.scale = 1, groups = ir.species) +
+      geom_point(aes(x = pca_data()$x, y = pca_data()$y, color = pca_data()$species)) +
+      labs(x = input$x_var, y = input$y_var, title = "PCA Plot") +
+      theme(legend.direction = 'horizontal', legend.position = 'top') + 
+      scale_color_discrete(name = '')
+  }
+  
+  # render PCA plot
+  output$pca_plot <- renderPlot({ plotPCA() })
+  
+  # Check for equal X and Y inputs and update them accordingly
+  observeEvent(c(input$x_var, input$y_var), {
+    if(input$x_var == input$y_var) {
+      updateSelectInput(session, "y_var", choices = setdiff(c("PC1", "PC2", "PC3", "PC4"), input$x_var))
+    }
+    output$pca_plot <- renderPlot({ plotPCA() })
+  })
 }
 
-# Create Shiny app ----
-shinyApp(ui = ui, server = server)
+
+
+
+# 執行應用
+shinyApp(ui, server)
 
