@@ -78,9 +78,8 @@ server <- function(input, output, session) {
   
   # plot PCA
   plotPCA <- function() {
-    ggbiplot(ir.pca, obs.scale = 1, var.scale = 1, groups = ir.species) +
+    ggbiplot(ir.pca, obs.scale = 1, var.scale = 1, groups = ir.species, ellipse =TRUE) +
       geom_point(aes(x = pca_data()$x, y = pca_data()$y, color = pca_data()$species)) +
-      labs(x = input$x_var, y = input$y_var, title = "PCA Plot") +
       theme(legend.direction = 'horizontal', legend.position = 'top') + 
       scale_color_discrete(name = '')
   }
