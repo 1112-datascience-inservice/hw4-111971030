@@ -8,6 +8,12 @@ if(!require('ggbiplot')) {
   install.packages('remotes', dependencies = TRUE)
   remotes::install_github("vqv/ggbiplot")
 }
+if(!require('DT')) {
+  install.packages('DT')
+  library(DT)
+}
+library(FactoMineR)
+library(factoextra)
 
 
 data(iris)
@@ -18,8 +24,8 @@ ui <- fluidPage(
   navbarPage(
     title = "111971030 黃哲偉 HW4 PCA", # 應用標題
     tabPanel("PCA", 
-             tabsetPanel(
-               tabPanel("pca plot", 
+             # tabsetPanel(
+               # tabPanel("pca plot", 
                         fluidPage(
                           fluidRow(
                             column(4, 
@@ -36,19 +42,26 @@ ui <- fluidPage(
                             )
                           )
                         )
-               ),
-               tabPanel("result data", ""),
-               tabPanel("input data(log)", ""),
-               tabPanel("extended results", "")
-              )
+               # ),
+               # tabPanel("result data", ""),
+               # tabPanel("input data(log)", ""),
+               # tabPanel("extended results", "")
+              # )
              ),
     tabPanel("CA", 
-             tabsetPanel(
-               tabPanel("ca plot", ""),
-               tabPanel("extended results", "")
+             # tabsetPanel(
+             #   tabPanel("ca plot", ""),
+             #   tabPanel("extended results", "")
+             #   )
+             fluidPage(
+               plotOutput("ca_plot")
                )
              ),
-    tabPanel("iris data", "This is page 3 content.")
+    tabPanel("iris data",
+             fluidPage(
+                DTOutput("iris_table")
+               )
+             )
   )
 )
 
@@ -78,7 +91,8 @@ server <- function(input, output, session) {
   
   # plot PCA
   plotPCA <- function() {
-    ggbiplot(ir.pca, obs.scale = 1, var.scale = 1, groups = ir.species, ellipse =TRUE) +
+    ggbiplot(ir.pca, obs.scale = 1, var.scale = 1, groups = ir.species, ellipse =TRUE, 
+             choices = c(which(colnames(ir.pca$x) == input$x_var), which(colnames(ir.pca$x) == input$y_var))) +
       geom_point(aes(x = pca_data()$x, y = pca_data()$y, color = pca_data()$species)) +
       theme(legend.direction = 'horizontal', legend.position = 'top') + 
       scale_color_discrete(name = '')
@@ -93,6 +107,33 @@ server <- function(input, output, session) {
       updateSelectInput(session, "y_var", choices = setdiff(c("PC1", "PC2", "PC3", "PC4"), input$x_var))
     }
     output$pca_plot <- renderPlot({ plotPCA() })
+  })
+  
+  
+  # define CA
+  iris_ca <- iris[, c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width", "Species")]
+  
+  # 將非數值型別的變數轉換為數值型別的變數
+  iris_ca$Species <- as.numeric(iris_ca$Species)
+  
+  # 做 Correspondence analysis
+  res.ca <- CA(iris_ca)
+  
+  # 繪製 Correspondence analysis 圖
+  output$ca_plot <- renderPlot({
+    fviz_ca_biplot(res.ca,
+                   col.var = "black",
+                   col.ind = iris_ca$Species,
+                   legend.title = "Species",
+    )
+  })
+  
+  iris_reactive <- reactive({
+    iris
+  })
+  
+  output$iris_table <- renderDT({
+    DT::datatable(iris_reactive())
   })
 }
 
