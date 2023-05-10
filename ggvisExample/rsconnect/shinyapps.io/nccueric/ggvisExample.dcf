@@ -1,0 +1,13 @@
+name: ggvisExample
+title: ggvisExample
+username:
+account: nccueric
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 9005461
+bundleId: 7161860
+url: https://nccueric.shinyapps.io/ggvisExample/
+when: 1682996577.91172
+lastSyncTime: 1682996577.91173
+asMultiple: FALSE
+asStatic: FALSE

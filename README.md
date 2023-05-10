@@ -2,7 +2,7 @@
 
 #### Name: 黃哲偉
 #### Student ID: 111971030
-#### ShinyApps link: [<https://ericnccu.shinyapps.io/NCCU_DS2023_hw4_111971030/>]
+#### ShinyApps link: [<https://nccueric.shinyapps.io/NCCU_DS2023_hw4_111971030/>]
 
 ## Description
 

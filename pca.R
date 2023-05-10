@@ -6,6 +6,6 @@ ir.species <- iris[, 5]
 ir.pca <- prcomp(log.ir,center = TRUE, scale. = TRUE)
 library(ggbiplot)
 g <- ggbiplot(ir.pca, obs.scale = 1, var.scale = 1, groups = ir.species)
-g <- g + scale_color_discrete(name = '')
-g <- g + theme(legend.direction = 'horizontal', legend.position = 'top')
+#g <- g + scale_color_discrete(name = '')
+#g <- g + theme(legend.direction = 'horizontal', legend.position = 'top')
 print(g)
